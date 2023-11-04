@@ -16,6 +16,9 @@ class DataCleaner:
 
     def clean_transform(self):
         
+        # Drop Duplicates
+        self.trending_data_df.drop_duplicates(inplace=True)
+        
         # Expand Category ID JSON Dataframe
         self.cat_df = pd.DataFrame.from_dict(
             [cat_dict for cat_dict in self.cat_df["items"]]
