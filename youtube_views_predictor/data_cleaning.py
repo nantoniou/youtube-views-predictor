@@ -48,42 +48,47 @@ class DataCleaner:
         
         
         
-    def tranform_views(self, method: str, fit: bool)
+    def tranform_views(self, method: str, fit: bool, df: pd.DataFrame = None)
         
         """
-        method can be log, standard scaler, or both
+        Method can be log, standard scaler, or both
         """
-        self.trending_data_df["view_count_scaled"] = self.trending_data_df["view_count"]
-        self.trending_data_df["likes_scaled"] = self.trending_data_df["likes"]
-        self.trending_data_df["dislikes_scaled"] = self.trending_data_df["dislikes"]
+        if not df:
+            df = self.trending_data_df
+        
+        df["view_count_scaled"] = df["view_count"]
+        df["likes_scaled"] = df["likes"]
+        df["dislikes_scaled"] = df["dislikes"]
         
         
         if method in ["log", "both"]:
-            self.trending_data_df["view_count_scaled"] = np.log(self.trending_data_df["view_count"])
-            self.trending_data_df["likes_scaled"] = np.log(self.trending_data_df["likes"])
-            self.trending_data_df["dislikes_scaled"] = np.log(self.trending_data_df["dislikes"])
+            df["view_count_scaled"] = np.log(df["view_count"])
+            df["likes_scaled"] = np.log(df["likes"])
+            df["dislikes_scaled"] = np.log(df["dislikes"])
         
         if method in ["StandardScaler", "both"] and fit:
-            self.trending_data_df["view_count_scaled"] = self.std_scaler_views.fit_transform(
-                self.trending_data_df.view_count.values.reshape(-1,1)
+            df["view_count_scaled"] = self.std_scaler_views.fit_transform(
+                df.view_count.values.reshape(-1,1)
             )
-            self.trending_data_df["likes_scaled"] = self.std_scaler_views.fit_transform(
-                self.trending_data_df.likes.values.reshape(-1,1)
+            df["likes_scaled"] = self.std_scaler_views.fit_transform(
+                df.likes.values.reshape(-1,1)
             )
-            self.trending_data_df["dislikes_scaled"] = self.std_scaler_views.fit_transform(
-                self.trending_data_df.dislikes.values.reshape(-1,1)
+            df["dislikes_scaled"] = self.std_scaler_views.fit_transform(
+                df.dislikes.values.reshape(-1,1)
             )
             
         if method in ["StandardScaler", "both"] and not fit:
-            self.trending_data_df["view_count_scaled"] = self.std_scaler_views.transform(
-                self.trending_data_df.view_count.values.reshape(-1,1)
+            df["view_count_scaled"] = self.std_scaler_views.transform(
+                df.view_count.values.reshape(-1,1)
             )
-            self.trending_data_df["likes_scaled"] = self.std_scaler_views.transform(
-                self.trending_data_df.likes.values.reshape(-1,1)
+            df["likes_scaled"] = self.std_scaler_views.transform(
+                df.likes.values.reshape(-1,1)
             )
-            self.trending_data_df["dislikes_scaled"] = self.std_scaler_views.transform(
-                self.trending_data_df.dislikes.values.reshape(-1,1)
+            df["dislikes_scaled"] = self.std_scaler_views.transform(
+                df.dislikes.values.reshape(-1,1)
             )
+            
+        return df
         
         
         
