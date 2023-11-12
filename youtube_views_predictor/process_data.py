@@ -2,14 +2,16 @@ import data_cleaning
 import text_feature_engineering
 import time_features
 
-
 import pandas as pd
 import datetime as dt
 
 if __name__ == "__main__":
     # Load in the data
     US_data_file = "../data/US_youtube_trending_data.csv"
+    US_category_file = "../data/US_category_id.json"
+
     df = pd.read_csv(US_data_file)#[0:1000]
+    us_cat = pd.read_json(US_category_file)
     #df = time_features.add_new_df_cols_US(df)
 
     # Separate train, validation, and test datsets by time
@@ -25,12 +27,19 @@ if __name__ == "__main__":
     test_df = df[(df['publishedAt'] >= test_start_date)]
 
     # Clean the input data
-    #data_cleaner = data_cleaning.DataCleaner()
-    #df.
+    #trending_data, category_id
+    data_cleaner = data_cleaning.DataCleaner(train_df, us_cat)
+    data_cleaner.clean_transform()
+    data_cleaner.tranform_views(method="StandardScaler", fit=True)
+    #Do the same for the other columns
 
     
+    train_df = data_cleaner.trending_data_df
+    print(train_df.columns)
 
     #Apply text transformations
+    time_features.TextFeatureExtractor(keywords=[])
+    
     
 
 
@@ -40,8 +49,8 @@ if __name__ == "__main__":
 
 
     #Save train, validation, and test dataframes
-    train_df.to_csv("../data/US_youtube_trending_train.csv")
-    validation_df.to_csv("../data/US_youtube_trending_validation.csv")
-    test_df.to_csv("../data/US_youtube_trending_test.csv")
+    # train_df.to_csv("../data/US_youtube_trending_train.csv")
+    # validation_df.to_csv("../data/US_youtube_trending_validation.csv")
+    # test_df.to_csv("../data/US_youtube_trending_test.csv")
     
       
