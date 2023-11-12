@@ -242,6 +242,7 @@ def add_new_df_cols(files, data_folder, countries):
     """
     Add new columns to all dataframes
     """
+    dfs = []
     for file, country in zip(files, countries):
         filename = data_folder + file
         df = pd.read_csv(filename)
@@ -259,4 +260,23 @@ def add_new_df_cols(files, data_folder, countries):
         new_filename = data_folder + stem + file
         print(f"Saving {new_filename}")
         df.to_csv(new_filename, index=False)
+        dfs.append(df)
+    return dfs
+
+def add_new_df_cols_US(df):
+    """
+    Add new columns to the US dataframes
+    """
+    df = add_days_on_trending(df)
+    df = add_days_since_published(df)
+    df = add_time_of_day_variables(df)
+    df = add_day_of_week(df)
+    df = add_is_weekend(df)
+    df = add_local_time_of_day(df, timezone_str='America/New_York')
+    df = add_time_of_day_variables(df, output_column_modifier="local_", published_at_col='local_time_of_day_published')
+    df = add_US_holiday_column(df)
+    df = calculate_channel_statistics_prev_time(df, lookback_days=365)
+    #df = calculate_channel_statistics(df)
+    df = calculate_average_days_on_trending(df)
+    return df
 
