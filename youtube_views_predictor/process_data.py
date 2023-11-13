@@ -38,7 +38,8 @@ if __name__ == "__main__":
     print(train_df.columns)
 
     #Apply text transformations
-    time_features.TextFeatureExtractor(keywords=[])
+    text_feature_extractor = time_features.TextFeatureExtractor(keywords=[])
+    train_df = text_feature_extractor.create_text_features(train_df)
     
     
 
