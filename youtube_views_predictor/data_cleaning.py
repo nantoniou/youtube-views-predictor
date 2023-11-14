@@ -48,13 +48,13 @@ class DataCleaner:
         
         
         
-    def tranform_views(self, method: str, fit: bool, df: pd.DataFrame = None)
+    def tranform_views(self, method: str, fit: bool, df: pd.DataFrame = None):
         
         """
         Method can be log, standard scaler, or both
         """
-        if not df:
-            df = self.trending_data_df
+        #if not df:
+        #    df = self.trending_data_df
         
         df["view_count_scaled"] = df["view_count"]
         df["likes_scaled"] = df["likes"]
