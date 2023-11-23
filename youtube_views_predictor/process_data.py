@@ -9,7 +9,7 @@ if __name__ == "__main__":
     # Load in the data
     US_data_file = "../data/US_youtube_trending_data.csv"
     US_category_file = "../data/US_category_id.json"
-    thumbnail_info = "../data/all_thumbnails_info.csv"
+    thumbnail_info = "../data/all_thumbnails_info_20231122.csv"
 
     df = pd.read_csv(US_data_file)#[0:1000]
     us_cat = pd.read_json(US_category_file)

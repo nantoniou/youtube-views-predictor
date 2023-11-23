@@ -219,6 +219,87 @@ def calculate_channel_statistics_prev_time(df, lookback_days=365):
     return df
 
 
+def calculate_channel_statistics_prev_time_log(df, lookback_days=365):
+    #Partially written by GPT-4
+    # Convert 'publishedAt' to datetime if it's not already
+    df['publishedAt'] = pd.to_datetime(df['publishedAt'])
+    # Sort the DataFrame by channelID and publishedAt to ensure chronological order
+    df.sort_values(by=['channelId', 'publishedAt'], ascending=True, inplace=True)
+    # Initialize the columns where the statistics will be stored
+    df[f'previous_{lookback_days}_days_videos_count'] = 0
+    df[f'previous_{lookback_days}_days_avg_views'] = np.nan
+    df[f'previous_{lookback_days}_days_avg_likes'] = np.nan
+    df[f'previous_{lookback_days}_days_avg_dislikes'] = np.nan
+    df[f'previous_{lookback_days}_days_geo_avg_like_dislike_ratio'] = np.nan
+    df[f'previous_{lookback_days}_days_avg_days_on_trending'] = np.nan
+    df[f'previous_{lookback_days}_days_avg_comment_count'] = np.nan
+    
+    #Add a few aggregate log columns
+    df[f'previous_{lookback_days}_days_log_videos_count'] = 0
+    df[f'previous_{lookback_days}_days_log_avg_views'] = np.nan
+    df[f'previous_{lookback_days}_days_log_avg_likes'] = np.nan
+    df[f'previous_{lookback_days}_days_log_avg_dislikes'] = np.nan
+    df[f'previous_{lookback_days}_days_log_avg_days_on_trending'] = np.nan
+    df[f'previous_{lookback_days}_days_log_avg_comment_count'] = np.nan
+    
+    df['last_video_views'] = np.nan
+    df['last_video_likes'] = np.nan
+    df['last_video_dislikes'] = np.nan
+    df['last_video_days_on_trending'] = np.nan
+    df['last_video_comment_count'] = np.nan
+    
+    #Add a few previous video log columns
+    df['last_video_log_views'] = np.nan
+    df['last_video_log_likes'] = np.nan
+    df['last_video_log_dislikes'] = np.nan
+    df['last_video_log_days_on_trending'] = np.nan
+    df['last_video_log_comment_count'] = np.nan
+    
+    # Group by channelID
+    for channel_id, group in df.groupby('channelId'):
+        # Track the most recent day each video was on trending
+        last_day_per_video = group.groupby('video_id').tail(1)
+        for index, current_row in group.iterrows():
+            # Consider videos that were published before the current video's trending_date
+            previous_videos_lt_cur = last_day_per_video['publishedAt'] < current_row['publishedAt']
+            previous_videos_gt_lb = last_day_per_video['publishedAt'] >= (current_row['publishedAt'] - dt.timedelta(days=lookback_days))
+            previous_videos = last_day_per_video[previous_videos_lt_cur & previous_videos_gt_lb]
+            #print(f"len(previous_videos): {len(previous_videos)}")
+            if not previous_videos.empty:
+                # Calculate statistics for previous videos
+                df.at[index, f'previous_{lookback_days}_days_videos_count'] = previous_videos['video_id'].nunique()
+                df.at[index, f'previous_{lookback_days}_days_avg_views'] = previous_videos['view_count'].mean()
+                df.at[index, f'previous_{lookback_days}_days_avg_likes'] = previous_videos['likes'].mean()
+                df.at[index, f'previous_{lookback_days}_days_avg_dislikes'] = previous_videos['dislikes'].mean()
+                df.at[index, f'previous_{lookback_days}_days_avg_days_on_trending'] = previous_videos['days_on_trending'].mean()
+                df.at[index, f'previous_{lookback_days}_days_avg_comment_count'] = previous_videos['comment_count'].mean()
+                # Calculate the geometric mean of the like to dislike ratios
+                ratios = previous_videos['likes'] / previous_videos['dislikes'].replace(0, np.nan)
+                df.at[index, f'previous_{lookback_days}_days_geo_avg_like_dislike_ratio'] = gmean(ratios.dropna())
+
+                #Do the same with the log features
+                df.at[index, f'previous_{lookback_days}_days_log_videos_count'] = np.log(previous_videos['video_id'].nunique() + 1)
+                df.at[index, f'previous_{lookback_days}_days_log_avg_views'] = np.log(previous_videos['view_count'] + 1).mean()
+                df.at[index, f'previous_{lookback_days}_days_log_avg_likes'] = np.log(previous_videos['likes'] + 1).mean()
+                df.at[index, f'previous_{lookback_days}_days_log_avg_dislikes'] = np.log(previous_videos['dislikes'] + 1).mean()
+                df.at[index, f'previous_{lookback_days}_days_log_avg_days_on_trending'] = np.log(previous_videos['days_on_trending'] + 1).mean()
+                df.at[index, f'previous_{lookback_days}_days_log_avg_comment_count'] = np.log(previous_videos['comment_count'] + 1).mean()
+                
+                # Get the statistics of the last video
+                last_video = previous_videos.iloc[-1]
+                df.at[index, 'last_video_views'] = last_video['view_count']
+                df.at[index, 'last_video_likes'] = last_video['likes']
+                df.at[index, 'last_video_dislikes'] = last_video['dislikes']
+                df.at[index, 'last_video_days_on_trending'] = last_video['days_on_trending']
+                df.at[index, 'last_video_comment_count'] = last_video['comment_count']
+                
+                df.at[index, 'last_video_log_views'] = np.log(last_video['view_count'])
+                df.at[index, 'last_video_log_likes'] = np.log(last_video['likes'])
+                df.at[index, 'last_video_log_dislikes'] = np.log(last_video['dislikes'])
+                df.at[index, 'last_video_log_days_on_trending'] = np.log(last_video['days_on_trending'])
+                df.at[index, 'last_video_log_comment_count'] = np.log(last_video['comment_count'])
+                
+    return df
 
 
 ##### EXAMPLE USAGE
@@ -275,8 +356,8 @@ def add_new_df_cols_US(df):
     df = add_local_time_of_day(df, timezone_str='America/New_York')
     df = add_time_of_day_variables(df, output_column_modifier="local_", published_at_col='local_time_of_day_published')
     df = add_US_holiday_column(df)
-    df = calculate_channel_statistics_prev_time(df, lookback_days=365)
+    df = calculate_channel_statistics_prev_time_log(df, lookback_days=365)
+    #df = calculate_channel_statistics_prev_time(df, lookback_days=365)
     #df = calculate_channel_statistics(df)
     df = calculate_average_days_on_trending(df)
     return df
-
