@@ -44,7 +44,24 @@ if __name__ == "__main__":
     test_df = data_cleaner.tranform_views(method="StandardScaler", fit=False, df=test_df)
     
     #Apply text transformations
-    text_feature_extractor = text_feature_engineering.TextFeatureExtractor(keywords=[])
+    keywords = ['trailer',
+     'shorts',
+     'full',
+     'official',
+     'video',
+     '100',
+     '1',
+     'music',
+     'world',
+     '2022',
+     'highlights',
+     'vs',
+     'day',
+     'ft',
+     'game',
+     'nba',
+     'how']
+    text_feature_extractor = text_feature_engineering.TextFeatureExtractor(keywords=keywords)
     
     train_df = text_feature_extractor.create_text_features(train_df)
     validation_df = text_feature_extractor.create_text_features(validation_df)
