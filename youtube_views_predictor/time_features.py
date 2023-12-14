@@ -6,6 +6,19 @@ import holidays
 from scipy.stats import gmean
 import datetime as dt
 
+def change_time_to_local(df, publishedAt_col='publishedAt', timezone_str='America/Los_Angeles'):
+    df[publishedAt_col] = pd.to_datetime(df[publishedAt_col])
+    if df[publishedAt_col].dt.tz is None:
+        # If not timezone-aware, localize to UTC
+        df[publishedAt_col] = pd.to_datetime(df[publishedAt_col]).dt.tz_localize('UTC')
+    else:
+        # If timezone-aware, ensure it is UTC to standardize before conversion
+        df[publishedAt_col] = df[publishedAt_col].dt.tz_convert('UTC')
+    # Convert to the desired timezone
+    local_timezone = pytz.timezone(timezone_str)
+    df[publishedAt_col] = df[publishedAt_col].dt.tz_convert(local_timezone)
+    return df
+
 def add_days_on_trending(df, video_id_col='video_id', trending_date_col='trending_date'):
     # Written by GPT-4
     # Ensure the trending_date column is in datetime format
@@ -348,13 +361,14 @@ def add_new_df_cols_US(df):
     """
     Add new columns to the US dataframes
     """
+    df = change_time_to_local(df, timezone_str='America/Los_Angeles')
     df = add_days_on_trending(df)
     df = add_days_since_published(df)
     df = add_time_of_day_variables(df)
     df = add_day_of_week(df)
     df = add_is_weekend(df)
-    df = add_local_time_of_day(df, timezone_str='America/New_York')
-    df = add_time_of_day_variables(df, output_column_modifier="local_", published_at_col='local_time_of_day_published')
+    #df = add_local_time_of_day(df, timezone_str='America/Los_Angeles')
+    #df = add_time_of_day_variables(df, output_column_modifier="local_", published_at_col='local_time_of_day_published')
     df = add_US_holiday_column(df)
     df = calculate_channel_statistics_prev_time_log(df, lookback_days=365)
     #df = calculate_channel_statistics_prev_time(df, lookback_days=365)
